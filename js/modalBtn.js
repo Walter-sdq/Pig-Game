@@ -23,19 +23,10 @@ const closeModal = function () {
 
 // Event Listeners
 // Open Modal On Click
-modalBtn.addEventListener('click', () => {
-    modal.classList.remove('hidden');
-    overlay.classList.remove('hidden');
-});
+modalBtn.addEventListener('click', openModal);
 
 // Close Modal On Click
-closeModalBtn.addEventListener('click', () => {
-    modal.classList.add('hidden');
-    overlay.classList.add('hidden');
-})
+closeModalBtn.addEventListener('click', closeModal)
 
 // Close Modal On Overlay click
-overlay.addEventListener('click', () => {
-    modal.classList.add('hidden');
-    overlay.classList.add('hidden');
-})
+overlay.addEventListener('click', closeModal)
