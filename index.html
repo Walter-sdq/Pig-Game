@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <title>Pig Game</title>
+</head>
+
+<body>
+
+    <main>
+
+        <!-- Reload -->
+        <div class="hidden" id="reloadAnimation">
+            <img class="loadingGif" src="./img/loadingGif.gif" alt="Loading Gif">
+            <div class="overlay"></div>
+        </div>
+
+        <section class="player player--1 player--active">
+            <h2 class="name" id="name--1">Player 1</h2>
+            <p class="score" id="score--1">43</p>
+            <div class="current">
+                <p class="current-label">Current</p>
+                <p class="current-score" id="current--1">0</p>
+            </div>
+        </section>
+
+        <section class="player player--2">
+            <h2 class="name" id="name--2">Player 2</h2>
+            <p class="score" id="score--2">43</p>
+            <div class="current">
+                <p class="current-label">Current</p>
+                <p class="current-score" id="current--2">0</p>
+            </div>
+        </section>
+
+        <!-- Cofetti -->
+        <img class="confetti-img1 hidden" src="./img/confetti-animation.gif" alt="confeffi Image2">
+
+        <img class="confetti-img2 hidden" src="./img/confetti-animation.gif" alt="confeffi Image2">
+
+
+        <img src="./img/dice-5.png" alt="Playing dice" class="dice" />
+        <!-- Rolling Dice -->
+        <img src="./img/dice-3.png" alt="Playing dice" class="dice2 hidden" />
+
+        <img src="./img/nextGif.gif" alt="Next Gif" class="nextGif hidden" />
+        <img src="./img/nextGif.gif" alt="Next Gif" class="nextGif2 hidden" />
+
+
+        <button class="btn btn--new">🔄 New game</button>
+        <button class="btn btn--roll">🎲 Roll dice</button>
+        <button class="btn btn--hold">📥 Hold</button>
+
+        <!-- Draggable Btn -->
+        <button class="rules-btn show-modal" id="draggable-btn">📔</button>
+
+        
+    <div class="modal hidden">
+        <button class="close-modal-btn">&times;</button>
+        <h2>📖 Game Rules</h2>
+        <ul>
+            <li>Dice numbers range from 1 - 6.</li>
+            <li>Whatever you roll gets added to your current Score.</li>
+            <li>Clicking <b>Hold</b> The Score get recored and player turns are switched.</li>
+            <li>Getting a roll 1, causes you to lose your current score and switch player turn. </li>
+            <li>The first person to reach 100 Score wins 🏆.</li>
+        </ul>
+    </div>
+
+    <div class="modal-overlay hidden"></div>
+
+
+    </main>
+
+    <!-- Js Script Files -->
+
+    <!-- Main Js Code -->
+    <script src="./script.js"></script>
+    <!-- Make Btn Dragglbe Code -->
+    <script src="./js/btnDraggble.js"></script>
+    <!-- Modal Btn Code -->
+    <script src="./js/modalBtn.js"></script>
+</body>
+
+</html>
