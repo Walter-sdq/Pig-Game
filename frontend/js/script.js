@@ -105,6 +105,32 @@ function connectToPlayer(id) {
 
 // Listen for connection confirmation from the server
 function setupSocketListeners() {
+  socket.on("connect", () => {
+    console.log("✅ Connected to server with ID:", socket.id);
+    showNotification("Connected to game server");
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log("❌ Disconnected:", reason);
+    showModal("Connection lost. The game will attempt to reconnect...");
+    
+    // Clear game state on disconnect
+    resetGame();
+    elements.playerIdDisplay.textContent = `Your ID: ${playerId}`;
+    elements.playerIdDisplay.classList.remove("hidden");
+  });
+
+  socket.on("playerDisconnected", (data) => {
+    console.log("Opponent disconnected");
+    showModal("Your opponent disconnected. Game ended.");
+    resetGame();
+  });
+
+  socket.on("error", (error) => {
+    console.error("Game error:", error);
+    showModal(error.message || "An error occurred");
+  });
+
   socket.on("connectionEstablished", (data) => {
     showModal(`Successfully connected to player: ${data.targetPlayerId}`);
   });
@@ -157,7 +183,12 @@ function setupSocketListeners() {
   });
 
   socket.on("gameReady", ({ opponentId }) => {
-    console.log(`Game ready to start. Opponent: ${opponentId}`);
+    if (!gameId) {
+      console.error("No game ID when game ready");
+      return;
+    }
+    
+    console.log(`Game ${gameId} ready with opponent ${opponentId}`);
     initializeGame();
     // Set initial turn
     isPlayerTurn = playerNumber === 1;
@@ -223,7 +254,17 @@ function initializeGame() {
 
 // Function to handle dice roll with animation
 function handleDiceRoll(diceNum) {
-  console.log(`Processing dice roll: ${diceNum}`);
+  if (!isPlayerTurn) {
+    console.error("Attempted to roll dice when not player's turn");
+    return;
+  }
+
+  if (!gameId) {
+    console.error("No game ID when rolling dice");
+    return;
+  }
+
+  console.log(`Processing dice roll: ${diceNum} in game ${gameId}`);
   const diceElement = elements.diceEl;
   diceElement.classList.remove("hidden");
   
@@ -353,12 +394,33 @@ function resetGame() {
 
 // Initialize the game
 document.addEventListener("DOMContentLoaded", () => {
-  // Use the deployed server URL when in production
   const serverUrl = window.location.hostname === 'localhost' 
     ? "http://localhost:5000"
-    : "https://piggame-bxfg.onrender.com"; // Replace with your Render URL
+    : "https://piggame-bxfg.onrender.com";
   
-  socket = io(serverUrl);
+  console.log("🔌 Connecting to server:", serverUrl);
+  
+  socket = io(serverUrl, {
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000
+  });
+
+  socket.on("connect", () => {
+    console.log("✅ Connected to server with ID:", socket.id);
+  });
+
+  socket.on("connect_error", (error) => {
+    console.error("❌ Connection error:", error);
+    showModal("Connection failed. Please check your internet connection.");
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log("❌ Disconnected:", reason);
+    showModal("Connection lost. Attempting to reconnect...");
+  });
+
   setupSocketListeners();
   renderActivePlayers();
 });
@@ -366,10 +428,16 @@ document.addEventListener("DOMContentLoaded", () => {
 // Socket.IO Setup
 function connectToGame() {
   try {
-    gameId = elements.gameIdInput.value || `game-${Math.random().toString(36).substring(2, 6)}`;
-    socket.emit("joinGame", gameId);
+    if (socket.connected) {
+      gameId = elements.gameIdInput.value || `game-${Math.random().toString(36).substring(2, 6)}`;
+      console.log("Attempting to join game:", gameId);
+      socket.emit("joinGame", { gameId, isInitiator: false });
+    } else {
+      showModal("Not connected to server. Please wait...");
+    }
   } catch (error) {
     console.error("Error connecting to game:", error);
+    showModal("Failed to connect to game");
   }
 }
 
