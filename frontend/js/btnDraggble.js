@@ -7,17 +7,19 @@ let offsetX;
 let offsetY;
 
 // Mouse down event to start dragging
-document.addEventListener('mousedown', (e) => {
+draggableBtn.addEventListener('mousedown', (e) => {
     isDragging = true;
 
     // check #1_Explanation 
     offsetX = e.clientX - draggableBtn.offsetLeft;
     offsetY = e.clientY - draggableBtn.offsetTop;
+    console.log(e);
+    
 });
 
 
 // Mouse move event to drag the button
-document.addEventListener('mousemove', (e) => {
+draggableBtn.addEventListener('mousemove', (e) => {
     if (isDragging) {
         draggableBtn.style.left = `${e.clientX - offsetX}px`;
         draggableBtn.style.top = `${e.clientY - offsetY}px`;
@@ -25,7 +27,7 @@ document.addEventListener('mousemove', (e) => {
 });
 
 // Mouse up event to stop dragging
-document.addEventListener('mouseup', () => {
+draggableBtn.addEventListener('mouseup', () => {
     isDragging = false;
 });
 

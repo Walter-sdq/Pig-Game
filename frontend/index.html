@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <link rel="shortcut icon" href="/img/dice-6.png" type="image/x-icon">
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./css/style.css">
     <title>Pig Game</title>
 </head>
 
@@ -14,14 +14,14 @@
     <main>
 
         <!-- Reload -->
-        <div class="hidden" id="reloadAnimation">
+        <div class="hidden" id="anim">
             <img class="loadingGif" src="./img/loadingGif.gif" alt="Loading Gif">
             <div class="overlay"></div>
         </div>
 
         <section class="player player--1 player--active">
             <h2 class="name" id="name--1">Player 1</h2>
-            <p class="score" id="score--1">43</p>
+            <p class="score" id="score--1">0</p>
             <div class="current">
                 <p class="current-label">Current</p>
                 <p class="current-score" id="current--1">0</p>
@@ -30,7 +30,7 @@
 
         <section class="player player--2">
             <h2 class="name" id="name--2">Player 2</h2>
-            <p class="score" id="score--2">43</p>
+            <p class="score" id="score--2">0</p>
             <div class="current">
                 <p class="current-label">Current</p>
                 <p class="current-score" id="current--2">0</p>
@@ -63,9 +63,10 @@
         <button class="close-modal-btn">&times;</button>
         <h2>📖 Game Rules</h2>
         <ul>
+            <li><b>Welcome to the Pig Game!!</b></li><br>
             <li>Dice numbers range from 1 - 6.</li>
             <li>Whatever you roll gets added to your current Score.</li>
-            <li>Clicking <b>Hold</b> The Score get recored and player turns are switched.</li>
+            <li>Clicking <b>Hold</b>,The Score get recored and player turns are switched.</li>
             <li>Getting a roll 1, causes you to lose your current score and switch player turn. </li>
             <li>The first person to reach 100 Score wins 🏆.</li>
         </ul>
@@ -79,7 +80,7 @@
     <!-- Js Script Files -->
 
     <!-- Main Js Code -->
-    <script src="./script.js"></script>
+    <script src="./js/script.js"></script>
     <!-- Make Btn Dragglbe Code -->
     <script src="./js/btnDraggble.js"></script>
     <!-- Modal Btn Code -->
