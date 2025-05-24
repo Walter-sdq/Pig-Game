@@ -353,7 +353,12 @@ function resetGame() {
 
 // Initialize the game
 document.addEventListener("DOMContentLoaded", () => {
-  socket = io("http://localhost:5000"); // Initialize socket once
+  // Use the deployed server URL when in production
+  const serverUrl = window.location.hostname === 'localhost' 
+    ? "http://localhost:5000"
+    : "https://piggame-bxfg.onrender.com"; // Replace with your Render URL
+  
+  socket = io(serverUrl);
   setupSocketListeners();
   renderActivePlayers();
 });
