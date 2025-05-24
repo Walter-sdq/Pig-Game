@@ -251,9 +251,9 @@ function switchPlayer() {
   currentScore = 0;
   activePlayer = activePlayer === 1 ? 2 : 1;
 
-  // Add next player animation
+  // Add next player animation with correct image path
   const nextGif = document.createElement('img');
-  nextGif.src = './img/next.gif';
+  nextGif.src = './img/nextGif.gif';  // Updated image path
   nextGif.classList.add(activePlayer === 1 ? 'nextGif' : 'nextGif2');
   document.body.appendChild(nextGif);
 
