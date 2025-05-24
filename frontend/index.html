@@ -37,6 +37,15 @@
             </div>
         </section>
 
+        <!-- Player ID Display -->
+        <div id="player-id-display" class="hidden"></div>
+
+        <!-- Online Players List -->
+        <div id="online-players">
+            <h3>Online Players</h3>
+            <ul id="online-players-list"></ul>
+        </div>
+
         <!-- Cofetti -->
         <img class="confetti-img1 hidden" src="./img/confetti-animation.gif" alt="confeffi Image2">
 
@@ -50,6 +59,20 @@
         <img src="./img/nextGif.gif" alt="Next Gif" class="nextGif hidden" />
         <img src="./img/nextGif.gif" alt="Next Gif" class="nextGif2 hidden" />
 
+        <!-- Dice Images for Animation -->
+        <img src="./img/dice-1.png" alt="Dice face 1" class="hidden" />
+        <img src="./img/dice-2.png" alt="Dice face 2" class="hidden" />
+        <img src="./img/dice-3.png" alt="Dice face 3" class="hidden" />
+        <img src="./img/dice-4.png" alt="Dice face 4" class="hidden" />
+        <img src="./img/dice-5.png" alt="Dice face 5" class="hidden" />
+        <img src="./img/dice-6.png" alt="Dice face 6" class="hidden" />
+
+        <!-- Connection Form -->
+        <div id="connect-form">
+            <label for="game-id">Enter Game ID:</label>
+            <input type="text" id="game-id" placeholder="Game ID" required />
+            <button id="connect-btn">Connect</button>
+        </div>
 
         <button class="btn btn--new">🔄 New game</button>
         <button class="btn btn--roll">🎲 Roll dice</button>
@@ -74,9 +97,17 @@
 
     <div class="modal-overlay hidden"></div>
 
+    <!-- Notification Container -->
+    <div id="notification" class="hidden">
+        <p id="notification-message"></p>
+        <button id="notification-close-btn">Close</button>
+    </div>
 
     </main>
 
+    <!-- Include Socket.IO client library -->
+    <!-- <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script> -->
+<script src="./js/socket.io.js"></script>
     <!-- Js Script Files -->
 
     <!-- Main Js Code -->

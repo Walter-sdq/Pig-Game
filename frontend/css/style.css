@@ -181,7 +181,7 @@ main {
     transform: translateX(-50%);
     height: 20rem;
     z-index: 5;
-    /* filter: invert(100%); Inverts Image Colour */
+    animation: fadeInOut 1s ease-in-out;
 }
 
 .nextGif2 {
@@ -192,7 +192,13 @@ main {
     height: 20rem;
     z-index: 5;
     transform: scaleX(-1);
-    /*Flips the Img on the Horizontal axis */
+    animation: fadeInOut 1s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
 }
 
 .player--winner {
@@ -322,17 +328,36 @@ main {
 }
 
 .modal {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* Balance To Center */
-    width: 70%;
-    background-color: white;
-    color: #252525;
-    padding: 1.5rem 1.5rem;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
     border-radius: 10px;
-    box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.514);
-    z-index: 9;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    min-width: 300px;
+    text-align: center;
+}
+
+.modal-content {
+    font-size: 1.8rem;
+}
+
+.modal button {
+    background: #021c3a;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.6rem;
+}
+
+.modal button:hover {
+    background: #0f66ca;
 }
 
 .modal h2 {
@@ -366,6 +391,89 @@ main {
     z-index: 8;
 }
 
+#player-id-display {
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    font-weight: bold;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    display: block; /* Ensure it is visible */
+}
+
+#player-id-display.hidden {
+    display: none;
+}
+
+/* Online Players List */
+#online-players {
+    position: absolute;
+    top: 5rem;
+    right: 2rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+    width: 20rem;
+    display: block; /* Ensure it is visible */
+}
+
+#online-players h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+#online-players-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.online-player {
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.3s;
+}
+
+.online-player:hover {
+    background-color: #d0d0d0;
+}
+
+/* Notification Container */
+#notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    padding: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+#notification.hidden {
+    display: none;
+}
+
+#notification button {
+    background-color: transparent;
+    border: none;
+    color: #721c24;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 10px;
+}
 
 /* ====== Responsiveness ===== */
 /* ======== Laptop ======== */

@@ -1,292 +1,395 @@
 "use strict";
 
-// Selecting elements
-const score1El = document.querySelector("#score--1");
-const score2El = document.querySelector("#score--2");
-const diceEl = document.querySelector(".dice");
-const diceEl2 = document.querySelector(".dice2");
-const btnNewGame = document.querySelector(".btn--new");
-const btnRollDice = document.querySelector(".btn--roll");
-const btnHoldTurn = document.querySelector(".btn--hold");
-const currentScore1 = document.querySelector("#current--1");
-const currentScore2 = document.querySelector("#current--2");
-const player1Conffeti = document.querySelector(".confetti-img1");
-const player2Conffeti = document.querySelector(".confetti-img2");
-const player1Active = document.querySelector(".player--1");
-const player2Active = document.querySelector(".player--2");
-const loadingAnimation = document.querySelector("#reloadAnimation");
-const nextPlayerGif1 = document.querySelector(".nextGif");
-const nextPlayerGif2 = document.querySelector(".nextGif2");
-
-// Starting Conditions
-score1El.textContent = 0;
-score2El.textContent = 0;
-diceEl.classList.add("hidden");
-
 // Declaring Variables
-let currentScore = 0; // Reset current score
-let activePlayer = 1; // 1 for Player 1, 2 for Player 2
+let currentScore = 0;
+let activePlayer = 1;
 let player1Score = 0;
 let player2Score = 0;
 const winScore = 100;
+let socket;
+let gameId;
+let playerNumber;
+let isPlayerTurn = false;
+let isGameCreator = false;
 
-// Functions
-// Random Dice Roll Function
-const diceRollFunc = function () {
-  // Animation Duration in millisecs
-  const animationRoll = 100;
-  const endAnimationRoll = 1000;
-
-  // Start Rolling Animation
-  const activateAnim = setInterval(() => {
-    // Display Dice2 Image
-    diceEl2.classList.remove("hidden");
-
-    // Generate animation random Numbers
-    let animRandNum = Math.floor(Math.random() * 6) + 1;
-
-    diceEl2.src = `./img/dice-${animRandNum}.png`; //Display Random Dice Num
-  }, animationRoll);
-
-  // End Random Animation
-  setTimeout(() => {
-    // Clear interval to stop animation
-    clearInterval(activateAnim);
-
-    // Hide Dice2 Image
-    diceEl2.classList.add("hidden");
-  }, endAnimationRoll);
+// Selecting elements
+const elements = {
+  score1El: document.querySelector("#score--1"),
+  score2El: document.querySelector("#score--2"),
+  diceEl: document.querySelector(".dice"),
+  btnNewGame: document.querySelector(".btn--new"),
+  btnRollDice: document.querySelector(".btn--roll"),
+  btnHoldTurn: document.querySelector(".btn--hold"),
+  currentScore1: document.querySelector("#current--1"),
+  currentScore2: document.querySelector("#current--2"),
+  player1Conffeti: document.querySelector(".confetti-img1"),
+  player2Conffeti: document.querySelector(".confetti-img2"),
+  player1Active: document.querySelector(".player--1"),
+  player2Active: document.querySelector(".player--2"),
+  connectForm: document.querySelector("#connect-form"),
+  gameIdInput: document.querySelector("#game-id"),
+  connectBtn: document.querySelector("#connect-btn"),
+  playerIdDisplay: document.querySelector("#player-id-display"),
+  onlinePlayersList: document.querySelector("#online-players-list"),
+  notification: document.getElementById("notification"),
+  notificationMessage: document.getElementById("notification-message"),
+  notificationCloseBtn: document.getElementById("notification-close-btn"),
 };
 
-// Track & Update Active Player Ui
-const activePlayerUi = function (activePlayer) {
-  // Clear Ui
-  player1Active.classList.remove("player--active");
-  player2Active.classList.remove("player--active");
+// Generate a unique alphanumeric ID for the player (max 4 characters)
+const playerId = Math.random().toString(36).substring(2, 6);
+// Hide player's own ID initially
+elements.playerIdDisplay.classList.add("hidden");
 
-  if (activePlayer === 1) {
-    player1Active.classList.add("player--active");
-  } else {
-    player2Active.classList.add("player--active");
-  }
-};
+// Simulate active players list
+const activePlayers = new Set([playerId]);
 
-// Track and use switch Player Gif
-const nextPlayerGif = function (activeplayer) {
-  // Disable Roll Dice Btn
-  btnRollDice.disabled = true;
-  // Change cursor to not-allowed
-  btnRollDice.style.cursor = "not-allowed";
-
-  // Change cursor to not-allowed
-  btnHoldTurn.disabled = true;
-  // Change cursor to not-allowed
-  btnHoldTurn.style.cursor = "not-allowed";
-
-  if (activePlayer === 1) {
-    // Display next player animation
-    nextPlayerGif1.classList.remove("hidden");
-
-    // Hide next player animation
-    setTimeout(() => {
-      nextPlayerGif1.classList.add("hidden");
-    }, 1500);
-  } else {
-    // Display next player animation
-    nextPlayerGif2.classList.remove("hidden");
-
-    // Hide next player animation
-    setTimeout(() => {
-      nextPlayerGif2.classList.add("hidden");
-    }, 1500);
-  }
-
-  // Re-Enable Btn if no player has won
-  if (player1Score < winScore && player2Score < winScore) {
-    setTimeout(() => {
-      // Enable Roll Dice Btn
-      btnRollDice.disabled = false;
-      // Change cursor to pointer
-      btnRollDice.style.cursor = "pointer";
-
-      // Enable Hold Btn
-      btnHoldTurn.disabled = false;
-      // Change cursor to pointer
-      btnHoldTurn.style.cursor = "pointer";
-    }, 1500);
-  }
-};
-
-// Confetti Display for winner & Ui Update
-const confettiDisplay = function (num) {
-  if (num === 1) {
-    player1Conffeti.classList.remove("hidden");
-    player1Active.classList.add("player--winner");
-  } else {
-    player2Conffeti.classList.remove("hidden");
-    player2Active.classList.add("player--winner");
-  }
-};
-
-// Update Player Score
-const updatePlayerScore = function () {
-  // Track and update Player Score
-  if (activePlayer === 1) {
-    // update Player 1 score
-    player1Score += Number(currentScore1.textContent); // Convert to num before addition
-    score1El.textContent = player1Score;
-
-    // Check to see if =< 100
-    if (player1Score >= winScore) {
-      confettiDisplay(activePlayer);
-      // Executed on win
-      // onWinUpdate();
+// Function to render active players
+function renderActivePlayers() {
+  elements.onlinePlayersList.innerHTML = ""; // Clear the list
+  activePlayers.forEach((id) => {
+    if (id !== playerId && !Array.from(elements.onlinePlayersList.children).some((child) => child.textContent === id)) {
+      // Ensure the current player is not added and avoid duplicates
+      const playerItem = document.createElement("li");
+      playerItem.className = "online-player";
+      playerItem.textContent = id;
+      playerItem.onclick = () => connectToPlayer(id);
+      elements.onlinePlayersList.appendChild(playerItem);
     }
-  } else {
-    // update Player 2 score
-    player2Score += Number(currentScore2.textContent); // Convert to num before addition
-    score2El.textContent = player2Score;
+  });
+}
 
-    // Check to see if =< 100
-    if (player2Score >= winScore) {
-      confettiDisplay(activePlayer);
-      // Executed on win
-      // onWinUpdate();
+// Notify the user of other players who are online
+function notifyOnlinePlayers(players) {
+  players.forEach((player) => {
+    if (player.id !== playerId) {
+      showNotification(`Player ${player.id} is online. Click their ID to connect.`);
     }
-  }
-};
+  });
+}
 
-// Update Scores and Switch Players on Hold
-const holdFunction = function () {
-  // Reset current score
-  currentScore = 0;
-
-  // Update Player score
-  updatePlayerScore();
-
-  // Swithed Player Animation
-  nextPlayerGif(activePlayer);
-
-  // Reset displayed Current score & switch player
-  if (activePlayer === 1) {
-    currentScore1.textContent = 0;
-    activePlayer = 2;
-  } else {
-    currentScore2.textContent = 0;
-    activePlayer = 1;
-  }
-
-  // Update Active Player Ui
-  activePlayerUi(activePlayer);
-};
-
-// Update Scores and Switch Players on Hold
-const diceRoll1 = function () {
-  // Reset current score
-  currentScore = 0;
-
-  // Discard Player score
-  // Track and update Player Score
-  if (activePlayer === 1) {
-    // Player 1 lose current score
-    currentScore1.textContent = 0; // update current score to zero
-  } else {
-    // Player 2 lose current score
-    currentScore2.textContent = 0; // update current score to zero
-  }
-
-  // Swithed Player Animation
-  nextPlayerGif(activePlayer);
-
-  // Reset displayed Current score & switch player
-  if (activePlayer === 1) {
-    currentScore1.textContent = 0;
-    activePlayer = 2;
-  } else {
-    currentScore2.textContent = 0;
-    activePlayer = 1;
-  }
-
-  // Update Active Player Ui
-  activePlayerUi(activePlayer);
-};
-
-// ====================== Event Listener
-
-// Dice Roll
-btnRollDice.addEventListener("click", function () {
-  // Dice Random Roll Function
-  diceRollFunc();
-
-  let diceNum = 0; //declare dice variable
-
-  activePlayerUi(activePlayer);
-
-  // Display Dice Image
-  diceEl.classList.remove("hidden");
-
-  // Generate Random Number
-  diceNum = Number(Math.floor(Math.random() * 6) + 1);
-
-  diceEl.src = `./img/dice-${diceNum}.png`; // Change image to Dice No.
-
-  // Check for rolled 1, if true, switch to next player
-  // delayed by 1 sec
+// Add custom modal function
+function showModal(message) {
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <p>${message}</p>
+      <button onclick="this.parentElement.parentElement.remove()">OK</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  // Auto-remove after 3 seconds
   setTimeout(() => {
-    if (diceNum !== 1) {
-      // Add dice num. to the current score
-      currentScore += diceNum;
+    if (modal.parentElement) {
+      modal.remove();
+    }
+  }, 3000);
+}
 
-      // Track and update Player & Current Score
-      if (activePlayer === 1) {
-        currentScore1.textContent = currentScore;
-      } else {
-        currentScore2.textContent = currentScore;
+// Function to connect to another player
+function connectToPlayer(id) {
+  if (!socket) {
+    showModal("You must connect to the game before connecting to a player.");
+    return;
+  }
+
+  if (id !== playerId) {
+    socket.emit("connectToPlayer", { targetPlayerId: id, sourcePlayerId: playerId });
+  } else {
+    showModal("You cannot connect to yourself!");
+  }
+}
+
+// Listen for connection confirmation from the server
+function setupSocketListeners() {
+  socket.on("connectionEstablished", (data) => {
+    showModal(`Successfully connected to player: ${data.targetPlayerId}`);
+  });
+
+  socket.on("connectionRequest", (data) => {
+    console.log(`Received connection request from Player ${data.sourcePlayerId}`);
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <p>Player ${data.sourcePlayerId} wants to connect with you.</p>
+        <button onclick="acceptConnection(true)">Accept</button>
+        <button onclick="acceptConnection(false)">Decline</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    window.acceptConnection = (accepted) => {
+      modal.remove();
+      if (accepted) {
+        socket.emit("acceptConnection", { targetPlayerId: playerId, sourcePlayerId: data.sourcePlayerId });
       }
+    };
+  });
+
+  socket.on("connectionAccepted", (data) => {
+    console.log(`Connection accepted by Player ${data.targetPlayerId}`);
+    gameId = `${playerId}-${data.targetPlayerId}`;
+    console.log(`Generated game ID: ${gameId}`);
+    socket.emit("joinGame", gameId);
+  });
+
+  socket.on("playerAssigned", (number) => {
+    console.log(`Assigned as Player ${number}`);
+    playerNumber = number;
+    elements.connectForm.classList.add("hidden");
+    elements.playerIdDisplay.textContent = `Player ${number}`; // Only show player number
+    elements.playerIdDisplay.classList.remove("hidden");
+    
+    // Show game controls
+    elements.btnRollDice.classList.remove("hidden");
+    elements.btnHoldTurn.classList.remove("hidden");
+    elements.btnNewGame.classList.remove("hidden");
+  });
+
+  socket.on("gameReady", ({ opponentId }) => {
+    console.log(`Game ready to start. Opponent: ${opponentId}`);
+    initializeGame();
+    // Set initial turn
+    isPlayerTurn = playerNumber === 1;
+    if (isPlayerTurn) {
+      showModal("It's your turn! Roll the dice.");
+      elements.player1Active.classList.add("player--active");
+      elements.player2Active.classList.remove("player--active");
     } else {
-      // Switch to next player
-      diceRoll1();
+      showModal("Waiting for the other player to take their turn.");
+      elements.player1Active.classList.remove("player--active");
+      elements.player2Active.classList.add("player--active");
     }
-  }, 1100);
-});
+  });
 
-// Hold Btn Function
-btnHoldTurn.addEventListener("click", function () {
-  // Switch Player & Update Player Score
-  holdFunction();
-});
+  socket.on("diceRolled", (diceNum) => {
+    console.log(`Dice rolled: ${diceNum}`);
+    handleDiceRoll(diceNum);
+  });
 
-// Reset Game
-btnNewGame.addEventListener("click", function () {
-  // Reload Screen
-  reloadScreen();
-});
+  socket.on("updateScores", (playerScores, nextPlayer) => {
+    console.log(`Scores updated:`, playerScores);
+    updateScores(playerScores);
+    isPlayerTurn = nextPlayer === playerNumber;
+    switchPlayer();
+  });
 
-const reloadScreen = function () {
-  btnNewGame.setAttribute("disabled", true);
-  // Impliment after 1 secs
+  socket.on("updatePlayerList", (players) => {
+    updateOnlinePlayers(players);
+  });
+
+  socket.on("connectionError", (data) => {
+    showModal(data.message);
+  });
+
+  socket.on("gameFull", () => {
+    showModal("Game is full. Please try another game.");
+  });
+
+  socket.on("newGameNotification", (gameId) => {
+    showNotification(`A new game with ID ${gameId} is available!`);
+  });
+
+  socket.on("playerRequestJoin", (newPlayerId) => {
+    if (isGameCreator) {
+      const accept = confirm(`Player ${newPlayerId} wants to join your game. Accept?`);
+      if (accept) {
+        acceptPlayer(newPlayerId);
+      }
+    }
+  });
+}
+
+// Function to initialize the game state
+function initializeGame() {
+  resetGame(); // Reset the game state for a fresh start
+  isPlayerTurn = playerNumber === 1; // Player 1 starts the game
+  if (isPlayerTurn) {
+    showModal("It's your turn! Roll the dice.");
+  } else {
+    showModal("Waiting for the other player to take their turn.");
+  }
+}
+
+// Function to handle dice roll with animation
+function handleDiceRoll(diceNum) {
+  console.log(`Processing dice roll: ${diceNum}`);
+  const diceElement = elements.diceEl;
+  diceElement.classList.remove("hidden");
+  
+  // Dice rolling animation
+  let rollCount = 0;
+  const maxRolls = 10;
+  const rollInterval = setInterval(() => {
+    const randomNum = Math.floor(Math.random() * 6) + 1;
+    diceElement.src = `./img/dice-${randomNum}.png`;
+    rollCount++;
+    
+    if (rollCount >= maxRolls) {
+      clearInterval(rollInterval);
+      // Show final dice number
+      diceElement.src = `./img/dice-${diceNum}.png`;
+      
+      if (diceNum === 1) {
+        currentScore = 0;
+        switchPlayer();
+      } else {
+        currentScore += diceNum;
+        document.querySelector(`#current--${activePlayer}`).textContent = currentScore;
+      }
+    }
+  }, 100);
+}
+
+// Function to switch players
+function switchPlayer() {
+  console.log(`Switching from Player ${activePlayer} to Player ${activePlayer === 1 ? 2 : 1}`);
+  document.querySelector(`#current--${activePlayer}`).textContent = 0;
+  currentScore = 0;
+  activePlayer = activePlayer === 1 ? 2 : 1;
+
+  // Add next player animation
+  const nextGif = document.createElement('img');
+  nextGif.src = './img/next.gif';
+  nextGif.classList.add(activePlayer === 1 ? 'nextGif' : 'nextGif2');
+  document.body.appendChild(nextGif);
+
+  // Remove the animation after 1 second
   setTimeout(() => {
-    location.reload(); //Reload entire page
+    nextGif.remove();
   }, 1000);
-};
 
-// KEY EVENTS //
-document.addEventListener("keydown", (e) => {
-    console.log(e);
-  if (e.key === "Escape") {
-    reloadScreen();
+  elements.player1Active.classList.toggle("player--active");
+  elements.player2Active.classList.toggle("player--active");
+  isPlayerTurn = activePlayer === playerNumber;
+
+  if (isPlayerTurn) {
+    showModal("It's your turn!");
+  }
+}
+
+// Function to update scores
+function updateScores(playerScores) {
+  console.log(`Updating scores:`, playerScores);
+  elements.score1El.textContent = playerScores.player1;
+  elements.score2El.textContent = playerScores.player2;
+
+  if (playerScores.player1 >= winScore || playerScores.player2 >= winScore) {
+    const winner = playerScores.player1 >= winScore ? 1 : 2;
+    // Show winning animation
+    elements[`player${winner}Conffeti`].classList.remove("hidden");
+    elements[`player${winner}Active`].classList.add("player--winner");
+    showModal(`Player ${winner} wins!`);
+    
+    // Remove winning animation after 3 seconds
+    setTimeout(() => {
+      elements[`player${winner}Conffeti`].classList.add("hidden");
+      elements[`player${winner}Active`].classList.remove("player--winner");
+      resetGame();
+    }, 3000);
+  }
+}
+
+// Function to update the online players list dynamically
+function updateOnlinePlayers(players) {
+  elements.onlinePlayersList.innerHTML = ""; // Clear the list
+  players.forEach((player) => {
+    if (player.id !== playerId) { // Exclude the current player's ID
+      const playerItem = document.createElement("li");
+      playerItem.className = "online-player";
+      // Only display the last 4 characters of the player ID
+      const displayId = player.id.slice(-4);
+      playerItem.textContent = displayId;
+      playerItem.onclick = () => connectToPlayer(player.id);
+      elements.onlinePlayersList.appendChild(playerItem);
+    }
+  });
+}
+
+// Function to show notification
+function showNotification(message) {
+  elements.notificationMessage.textContent = message;
+  elements.notification.classList.remove("hidden");
+
+  elements.notificationCloseBtn.addEventListener("click", () => {
+    elements.notification.classList.add("hidden");
+  });
+}
+
+// Function to reset game state
+function resetGame() {
+  Object.assign(elements, {
+    score1El: { textContent: 0 },
+    score2El: { textContent: 0 },
+    currentScore1: { textContent: 0 },
+    currentScore2: { textContent: 0 },
+  });
+  elements.diceEl.classList.add("hidden");
+  elements.player1Conffeti.classList.add("hidden");
+  elements.player2Conffeti.classList.add("hidden");
+  elements.player1Active.classList.add("player--active");
+  elements.player2Active.classList.remove("player--active");
+  currentScore = 0;
+  activePlayer = 1;
+  player1Score = 0;
+  player2Score = 0;
+  isPlayerTurn = false;
+  isGameCreator = false;
+  elements.connectForm.classList.remove("hidden");
+  elements.playerIdDisplay.classList.add("hidden");
+  elements.onlinePlayersList.innerHTML = "";
+  elements.notification.classList.add("hidden");
+}
+
+// Initialize the game
+document.addEventListener("DOMContentLoaded", () => {
+  socket = io("http://localhost:5000"); // Initialize socket once
+  setupSocketListeners();
+  renderActivePlayers();
+});
+
+// Socket.IO Setup
+function connectToGame() {
+  try {
+    gameId = elements.gameIdInput.value || `game-${Math.random().toString(36).substring(2, 6)}`;
+    socket.emit("joinGame", gameId);
+  } catch (error) {
+    console.error("Error connecting to game:", error);
+  }
+}
+
+// Event Listeners
+elements.connectBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  connectToGame();
+});
+
+elements.btnRollDice.addEventListener("click", () => {
+  if (isPlayerTurn) {
+    socket.emit("rollDice", gameId);
+  } else {
+    showModal("It's not your turn!");
   }
 });
 
-document.addEventListener("keydown", (e) => {
-    console.log(e);
-  if (e.key === "h") {
-    holdFunction();
+elements.btnHoldTurn.addEventListener("click", () => {
+  if (isPlayerTurn) {
+    const playerScores = {
+      player1: Number(elements.score1El.textContent),
+      player2: Number(elements.score2El.textContent),
+    };
+    socket.emit("hold", gameId, playerScores);
+  } else {
+    showModal("It's not your turn!");
   }
 });
-document.addEventListener("keydown", (e) => {
-    console.log(e);
-  if (e.key === "r") {
-    diceRollFunc();
+
+elements.btnNewGame.addEventListener("click", () => {
+  resetGame();
+  if (isGameCreator) {
+    notifyOpenPlayers(gameId);
   }
 });
