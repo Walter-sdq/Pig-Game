@@ -38,8 +38,9 @@ const elements = {
 
 // Generate a unique alphanumeric ID for the player (max 4 characters)
 const playerId = Math.random().toString(36).substring(2, 6);
-// Hide player's own ID initially
-elements.playerIdDisplay.classList.add("hidden");
+// Show player's ID initially
+elements.playerIdDisplay.textContent = `Your ID: ${playerId}`;
+elements.playerIdDisplay.classList.remove("hidden");
 
 // Simulate active players list
 const activePlayers = new Set([playerId]);
@@ -125,6 +126,9 @@ function setupSocketListeners() {
       modal.remove();
       if (accepted) {
         socket.emit("acceptConnection", { targetPlayerId: playerId, sourcePlayerId: data.sourcePlayerId });
+        // Immediately create and join game
+        gameId = `${data.sourcePlayerId}-${playerId}`;
+        socket.emit("joinGame", { gameId, isInitiator: true });
       }
     };
   });
@@ -133,15 +137,18 @@ function setupSocketListeners() {
     console.log(`Connection accepted by Player ${data.targetPlayerId}`);
     gameId = `${playerId}-${data.targetPlayerId}`;
     console.log(`Generated game ID: ${gameId}`);
-    socket.emit("joinGame", gameId);
+    socket.emit("joinGame", { gameId, isInitiator: false }); // Add isInitiator flag
   });
 
   socket.on("playerAssigned", (number) => {
     console.log(`Assigned as Player ${number}`);
     playerNumber = number;
     elements.connectForm.classList.add("hidden");
-    elements.playerIdDisplay.textContent = `Player ${number}`; // Only show player number
-    elements.playerIdDisplay.classList.remove("hidden");
+    elements.playerIdDisplay.textContent = `Player ${number}`;
+
+    if (number === 1) {
+      isGameCreator = true;
+    }
     
     // Show game controls
     elements.btnRollDice.classList.remove("hidden");
@@ -295,13 +302,13 @@ function updateScores(playerScores) {
 
 // Function to update the online players list dynamically
 function updateOnlinePlayers(players) {
-  elements.onlinePlayersList.innerHTML = ""; // Clear the list
+  elements.onlinePlayersList.innerHTML = "";
   players.forEach((player) => {
-    if (player.id !== playerId) { // Exclude the current player's ID
+    if (player.id !== socket.id) {
       const playerItem = document.createElement("li");
       playerItem.className = "online-player";
-      // Only display the last 4 characters of the player ID
-      const displayId = player.id.slice(-4);
+      // Display player ID in the same format as shown at the top
+      const displayId = `Your ID: ${player.id.slice(-4)}`;
       playerItem.textContent = displayId;
       playerItem.onclick = () => connectToPlayer(player.id);
       elements.onlinePlayersList.appendChild(playerItem);

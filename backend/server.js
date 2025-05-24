@@ -52,32 +52,36 @@ io.on("connection", (socket) => {
       const sourceSocket = io.sockets.sockets.get(sourcePlayerId);
       if (sourceSocket) {
         sourceSocket.emit("connectionAccepted", { targetPlayerId });
+        const gameId = `${sourcePlayerId}-${targetPlayerId}`;
+        const game = getOrCreateGame(gameId);
+        game.players = [targetPlayerId, sourcePlayerId]; // Accepting player becomes Player 1
+        
+        // Initialize game state immediately
+        game.state = {
+          currentPlayer: 1,
+          scores: { player1: 0, player2: 0 },
+          currentScore: 0
+        };
       }
     });
 
     // Join a game room
-    socket.on("joinGame", (gameId) => {
+    socket.on("joinGame", ({ gameId, isInitiator }) => {
       console.log(`Player ${socket.id} joining game ${gameId}`);
       const game = getOrCreateGame(gameId);
 
       if (game.players.length < 2) {
-        const playerNumber = game.players.length + 1;
-        console.log(`Assigning as Player ${playerNumber}`);
-        game.players.push(socket.id);
-        connectedPlayers[socket.id].gameId = gameId;
+        const playerNumber = game.players.indexOf(socket.id) + 1;
         socket.join(gameId);
-        
-        // Emit player number assignment
         socket.emit("playerAssigned", playerNumber);
+        console.log(`Assigned as Player ${playerNumber}`);
 
-        // When two players have joined, start the game
         if (game.players.length === 2) {
-          console.log(`Game ${gameId} is now full and starting`);
           const [player1, player2] = game.players;
           io.to(player1).emit("gameReady", { opponentId: player2 });
           io.to(player2).emit("gameReady", { opponentId: player1 });
+          console.log(`Game ${gameId} is ready to start`);
           
-          // Initialize game state
           game.state = {
             currentPlayer: 1,
             scores: { player1: 0, player2: 0 },
@@ -87,7 +91,6 @@ io.on("connection", (socket) => {
       } else {
         socket.emit("gameFull");
       }
-      io.emit("updatePlayerList", Object.values(connectedPlayers));
     });
 
     // Handle dice roll
